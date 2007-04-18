@@ -1,6 +1,6 @@
 %define name holotz-castle
-%define version 1.3.8
-%define release %mkrel 3
+%define version 1.3.9
+%define release %mkrel 1
 
 %define Summary Holotz's Castle - A strategy platform scroller
 
