@@ -1,5 +1,5 @@
 %define name holotz-castle
-%define version 1.3.9
+%define version 1.3.10
 %define release %mkrel 1
 
 %define Summary Holotz's Castle - A strategy platform scroller
@@ -73,7 +73,7 @@ cat << EOF > %buildroot/%{_menudir}/%{name}
  section="More Applications/Games/Arcade"\
  title="%{Summary}"\
  longtitle="%{Summary}"\
- xdg=true"
+ xdg="true"
 EOF
 
 #game, xdg
