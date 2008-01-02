@@ -25,6 +25,7 @@ Summary: %{Summary}
 BuildRequires: SDL-devel SDL_mixer-devel SDL_image-devel SDL_ttf-devel
 BuildRequires: dos2unix, unzip
 BuildRequires: MesaGLU-devel
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %package -n %{name}-editor
 License: GPL
