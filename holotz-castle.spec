@@ -65,16 +65,6 @@ install -m 644 %{SOURCE10} -D %buildroot%{_liconsdir}/%{name}.png
 install -m 644 %{SOURCE11} -D %buildroot%{_iconsdir}/%{name}.png
 install -m 644 %{SOURCE12} -D %buildroot%{_miconsdir}/%{name}.png
 #game
-install -d 755 %buildroot%{_menudir}
-cat << EOF > %buildroot/%{_menudir}/%{name}
-?package(%{name}):command="%{_gamesbindir}/%{name}"\
- icon="%{name}.png"\
- needs="x11"\
- section="More Applications/Games/Arcade"\
- title="%{Summary}"\
- longtitle="%{Summary}"\
- xdg="true"
-EOF
 
 #game, xdg
 mkdir -p %{buildroot}%{_datadir}/applications
@@ -94,15 +84,6 @@ install -m 644 doc/%{name}-editor.6 %buildroot%{_mandir}/man6/
 install -m 644 %{SOURCE20} -D %buildroot%{_liconsdir}/%{name}-editor.png
 install -m 644 %{SOURCE21} -D %buildroot%{_iconsdir}/%{name}-editor.png
 install -m 644 %{SOURCE22} -D %buildroot%{_miconsdir}/%{name}-editor.png
-cat << EOF > %buildroot/%{_menudir}/%{name}-editor
-?package(%{name}-editor):command="%{_gamesbindir}/%{name}-editor"\
- icon="%{name}-editor.png"\
- needs="x11"\
- section="More Applications/Games/Arcade"\
- title="Holotz's Castle Editor"\
- longtitle="Level editor for Holotz's Castle"\
- xdg="true"
-EOF
 
 #editor, xdg
 mkdir -p %{buildroot}%{_datadir}/applications
@@ -140,7 +121,6 @@ rm -rf %buildroot
 %dir %{_gamesdatadir}/%{name}
 %{_gamesdatadir}/%{name}/game
 %{_mandir}/man6/%{name}.6*
-%{_menudir}/%{name}
 %{_liconsdir}/%{name}.png
 %{_iconsdir}/%{name}.png
 %{_miconsdir}/%{name}.png
@@ -152,7 +132,6 @@ rm -rf %buildroot
 %attr(0755,root,games) %{_gamesbindir}/%{name}-editor
 %{_gamesdatadir}/%{name}/editor
 %{_mandir}/man6/%{name}-editor.6*
-%{_menudir}/%{name}-editor
 %{_liconsdir}/%{name}-editor.png
 %{_iconsdir}/%{name}-editor.png
 %{_miconsdir}/%{name}-editor.png
