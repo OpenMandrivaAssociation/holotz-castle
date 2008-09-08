@@ -1,37 +1,33 @@
-%define name holotz-castle
-%define version 1.3.10
-%define release %mkrel 3
+Name:			holotz-castle
+Version:		1.3.12
+Release:		%mkrel 1
 
-%define Summary Holotz's Castle - A strategy platform scroller
+Summary:	Holotz's Castle - A strategy platform scroller
+License:	GPLv2+
+Group:		Games/Arcade
+URL:		http://www.mainreactor.net/holotzcastle/en/index_en.html
+Source0:	http://www.mainreactor.net/holotzcastle/download/%{name}-%{version}-src.tar.gz
+Source10:	hc-48x48.png
+Source11:	hc-32x32.png
+Source12:	hc-16x16.png
+Source20:	holotz-castle-editor-48x48.png
+Source21:	holotz-castle-editor-32x32.png
+Source22:	holotz-castle-editor-16x16.png
+Patch0:		holotz-castle-1.3.6-install.patch
+Patch1:		holotz-castle-1.3.11-compile-fixes.patch
 
-Name: %{name}
-Version: %{version}
-Release: %{release}
-URL: http://www.mainreactor.net/holotzcastle/en/index_en.html
-Source0: http://www.mainreactor.net/holotzcastle/download/%{name}-%{version}-src.tar.bz2
-#additionnal levels from Milan B.
-Source1: http://abrick.sourceforge.net/milanb-hc-levels.zip
-Source10: hc-48x48.png
-Source11: hc-32x32.png
-Source12: hc-16x16.png
-Source20: %{name}-editor-48x48.png
-Source21: %{name}-editor-32x32.png
-Source22: %{name}-editor-16x16.png
-Patch0: %{name}-1.3.6-install.patch
-Patch1: %{name}-1.3.8-warnings-fixes.patch
-License: GPL
-Group: Games/Arcade
-Summary: %{Summary}
-BuildRequires: SDL-devel SDL_mixer-devel SDL_image-devel SDL_ttf-devel
-BuildRequires: dos2unix, unzip
-BuildRequires: MesaGLU-devel
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+BuildRequires:	SDL-devel
+BuildRequires:	SDL_mixer-devel
+BuildRequires:	SDL_image-devel
+BuildRequires:	SDL_ttf-devel
+BuildRequires:  MesaGLU-devel
+BuildRoot:	%{_tmppath}/%{name}-%{version}
 
 %package -n %{name}-editor
-License: GPL
-Group: Games/Arcade
-Summary: Holotz's Castle level editor
-Requires: %{name} == %{version}
+License:	GPLv2+
+Group:		Games/Arcade
+Summary:	Holotz's Castle level editor
+Requires:	%{name} == %{version}
 
 %description
 A great mystery is hidden beyond the walls of Holotz's Castle. Will you be
@@ -45,25 +41,24 @@ This package contains a level editor for Holotz's Castle.
 %prep
 %setup -q -n %{name}-%{version}-src
 %patch0 -p0
-unzip -o %{SOURCE1}
-dos2unix res/playlist.txt res/README.txt
-rm -f res/savedata/empty.txt
 %patch1 -p1
+perl -pi -e s"|\r\n|\n|g" res/playlist.txt
+rm -f res/savedata/empty.txt
 
 %build
 make
 
 %install
-rm -rf %buildroot
-%makeinstall INSTALL_ROOT=%buildroot
+rm -rf %{buildroot}
+%makeinstall INSTALL_ROOT=%{buildroot}
 
-install -d 755 %buildroot%{_mandir}/man6/
-install -m 644 doc/%{name}.6 %buildroot%{_mandir}/man6/
-install -d 755 %buildroot%{_liconsdir}
-install -d 755 %buildroot%{_miconsdir}
-install -m 644 %{SOURCE10} -D %buildroot%{_liconsdir}/%{name}.png
-install -m 644 %{SOURCE11} -D %buildroot%{_iconsdir}/%{name}.png
-install -m 644 %{SOURCE12} -D %buildroot%{_miconsdir}/%{name}.png
+install -d -m 755 %{buildroot}%{_mandir}/man6/
+install -m 644 man/%{name}.6 %{buildroot}%{_mandir}/man6/
+install -d -m 755 %{buildroot}%{_liconsdir}
+install -d -m 755 %{buildroot}%{_miconsdir}
+install -m 644 %{_sourcedir}/hc-48x48.png -D %{buildroot}%{_liconsdir}/%{name}.png
+install -m 644 %{_sourcedir}/hc-32x32.png -D %{buildroot}%{_iconsdir}/%{name}.png
+install -m 644 %{_sourcedir}/hc-16x16.png -D %{buildroot}%{_miconsdir}/%{name}.png
 #game
 
 #game, xdg
@@ -80,10 +75,10 @@ Categories=X-MandrivaLinux-MoreApplications-Games-Arcade;Game;ArcadeGame;
 EOF
 
 #editor
-install -m 644 doc/%{name}-editor.6 %buildroot%{_mandir}/man6/
-install -m 644 %{SOURCE20} -D %buildroot%{_liconsdir}/%{name}-editor.png
-install -m 644 %{SOURCE21} -D %buildroot%{_iconsdir}/%{name}-editor.png
-install -m 644 %{SOURCE22} -D %buildroot%{_miconsdir}/%{name}-editor.png
+install -m 644 man/%{name}-editor.6 %{buildroot}%{_mandir}/man6/
+install -m 644 %{_sourcedir}/holotz-castle-editor-48x48.png -D %{buildroot}%{_liconsdir}/%{name}-editor.png
+install -m 644 %{_sourcedir}/holotz-castle-editor-32x32.png -D %{buildroot}%{_iconsdir}/%{name}-editor.png
+install -m 644 %{_sourcedir}/holotz-castle-editor-16x16.png -D %{buildroot}%{_miconsdir}/%{name}-editor.png
 
 #editor, xdg
 mkdir -p %{buildroot}%{_datadir}/applications
@@ -119,12 +114,11 @@ EOF
 %endif
 
 %clean
-rm -rf %buildroot
+rm -rf %{buildroot}
 
 %files
 %defattr(644,root,games,755)
-%doc LICENSE.txt MANUAL_EN.txt MANUAL_ES.txt MANUAL_EU.txt MANUAL_FR.txt
-%doc MANUAL_RU.txt MANUAL_UA.txt
+%doc LICENSE.txt doc/*.txt
 %attr(0755,root,games) %{_gamesbindir}/%{name}
 %dir %{_gamesdatadir}/%{name}
 %{_gamesdatadir}/%{name}/game
