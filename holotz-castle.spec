@@ -1,5 +1,5 @@
 Name:			holotz-castle
-Version:		1.3.12
+Version:		1.3.13
 Release:		%mkrel 1
 
 Summary:	Holotz's Castle - A strategy platform scroller
