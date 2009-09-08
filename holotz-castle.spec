@@ -1,5 +1,5 @@
 Name:			holotz-castle
-Version:		1.3.13
+Version:		1.3.14
 Release:		%mkrel 1
 
 Summary:	Holotz's Castle - A strategy platform scroller
@@ -15,6 +15,7 @@ Source21:	holotz-castle-editor-32x32.png
 Source22:	holotz-castle-editor-16x16.png
 Patch0:		holotz-castle-1.3.6-install.patch
 Patch1:		holotz-castle-1.3.11-compile-fixes.patch
+Patch2:		holotz-castle-1.3.14-compile-fixes.patch
 
 BuildRequires:	SDL-devel
 BuildRequires:	SDL_mixer-devel
@@ -42,6 +43,7 @@ This package contains a level editor for Holotz's Castle.
 %setup -q -n %{name}-%{version}-src
 %patch0 -p0
 %patch1 -p1
+%patch2 -p1
 perl -pi -e s"|\r\n|\n|g" res/playlist.txt
 rm -f res/savedata/empty.txt
 
