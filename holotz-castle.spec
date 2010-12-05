@@ -1,6 +1,6 @@
 Name:			holotz-castle
 Version:		1.3.14
-Release:		%mkrel 1
+Release:		%mkrel 2
 
 Summary:	Holotz's Castle - A strategy platform scroller
 License:	GPLv2+
