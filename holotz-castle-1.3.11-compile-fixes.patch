@@ -1,0 +1,406 @@
+diff -NarU3 holotz-castle-1.3.11-src.orig/JLib/JLib/Graphics/JFont.h holotz-castle-1.3.11-src/JLib/JLib/Graphics/JFont.h
+--- holotz-castle-1.3.11-src.orig/JLib/JLib/Graphics/JFont.h	2008-08-23 20:36:06.000000000 +0200
++++ holotz-castle-1.3.11-src/JLib/JLib/Graphics/JFont.h	2008-08-25 12:22:55.000000000 +0200
+@@ -36,7 +36,7 @@
+ 
+ /** Alineación del texto a renderizar.
+  */
+-typedef enum JFontAlign
++enum JFontAlign
+ {
+ 	JFONTALIGN_LEFT = 0,                  /**< Alineado a la izquierda. */
+ 	JFONTALIGN_RIGHT,                     /**< Alineado a la derecha. */
+@@ -50,7 +50,7 @@
+ {
+ 	/** Tipo de renderizado a usar
+ 	 */
+-	typedef enum JFontRenderType
++	enum JFontRenderType
+ 	{
+ 		JFONTRENDERTYPE_SOLID = 0,          /**< Sólido con colorkey. */
+ 		JFONTRENDERTYPE_SHADED,             /**< Con antialiasing en fondo sólido. */
+diff -NarU3 holotz-castle-1.3.11-src.orig/JLib/JLib/Util/JFS.cpp holotz-castle-1.3.11-src/JLib/JLib/Util/JFS.cpp
+--- holotz-castle-1.3.11-src.orig/JLib/JLib/Util/JFS.cpp	2008-08-23 20:36:06.000000000 +0200
++++ holotz-castle-1.3.11-src/JLib/JLib/Util/JFS.cpp	2008-08-25 12:27:55.000000000 +0200
+@@ -1112,7 +1112,7 @@
+ 				// Lee los datos desde el formato adecuado
+ 				if (JFS_COMPRESSED(index[id]->res))
+ 				{
+-					if (0 == (size = resFile.ZRead((void **)&buff)))
++					if (0 == (size = resFile.ZRead(&buff)))
+ 					{
+ 						fprintf(stderr, "JFS::Export - Error reading compressed resource\n");
+ 						delete[] buff;
+diff -NarU3 holotz-castle-1.3.11-src.orig/JLib/JLib/Util/JRW.cpp holotz-castle-1.3.11-src/JLib/JLib/Util/JRW.cpp
+--- holotz-castle-1.3.11-src.orig/JLib/JLib/Util/JRW.cpp	2008-08-23 20:36:06.000000000 +0200
++++ holotz-castle-1.3.11-src/JLib/JLib/Util/JRW.cpp	2008-08-25 12:27:55.000000000 +0200
+@@ -7,7 +7,7 @@
+ 
+ #include <JLib/Util/JRW.h>
+ 
+-u32 JRW::ZRead(void **buff)
++u32 JRW::ZRead(u8 **buff)
+ {
+ 	u32 len, lenUncomp;
+ 	
+@@ -112,12 +112,9 @@
+ 		return 0;
+ 	}
+ 
+-  // For compatibility with zlib
+-  unsigned long sizeCompUL, sizeUL;
+-  sizeCompUL = sizeComp;
+-  sizeUL = size;
++	unsigned long sizeCompUL = sizeComp;
+ 
+-	if (Z_OK != compress2((Bytef*)buffComp, (uLongf*)&sizeComp, (Bytef*)buff, size, level))
++	if (Z_OK != compress2(buffComp, &sizeCompUL, static_cast<const Byte *>(buff), size, level))
+ 	{
+ 		delete[] buffComp;
+ 		return 0;
+diff -NarU3 holotz-castle-1.3.11-src.orig/JLib/JLib/Util/JRW.h holotz-castle-1.3.11-src/JLib/JLib/Util/JRW.h
+--- holotz-castle-1.3.11-src.orig/JLib/JLib/Util/JRW.h	2008-08-23 20:36:06.000000000 +0200
++++ holotz-castle-1.3.11-src/JLib/JLib/Util/JRW.h	2008-08-25 12:37:28.000000000 +0200
+@@ -30,6 +30,8 @@
+ #ifndef _JRW_INCLUDED
+ #define _JRW_INCLUDED
+ 
++#include <string.h>
++
+ #include <JLib/Util/JTypes.h>
+ #include <JLib/Util/JObject.h>
+ #include <zlib.h>
+@@ -139,7 +141,7 @@
+    * @param  buff Buffer to fill with the read data uncompressed.
+    * @return Uncompressed size of the data. 
+    */
+-	u32 ZRead(void **buff);
++	u32 ZRead(u8 **buff);
+ 
+   /** Reads a bool data. The bool is stored as a single byte.
+    * @param  buff Variable with the result.
+@@ -195,6 +197,22 @@
+    */
+   u32 ReadLE32(s32 *buff) {if (0 < SDL_RWread(rwops, buff, 4, 1)) {*buff = SDL_SwapLE32(*buff); return 4;} return 0;}
+ 
++  /** Reads 32-bit IEEE-754 float data in little- endian format.
++   * @param  buff Variable with the result in the machine weight.
++   * @return Number of bytes read or 0 (zero) if an error occured. 
++   */
++  u32 ReadLE32(float *fbuff)
++	{
++		typedef char staticassert[sizeof(u32) == sizeof(float) ? 1 : -1 ];
++		u32 ibuff;
++		if (ReadLE32(&ibuff) == 4)
++		{
++			memcpy(fbuff, &ibuff, sizeof(float));
++			return 4;
++		}
++		return 0;
++	}
++
+   /** Reads a 32-bit unsigned data in big-endian format.
+    * @param  buff Variable with the result in the machine weight.
+    * @return Number of bytes read or 0 (zero) if an error occured. 
+@@ -284,6 +302,18 @@
+    */
+   u32 WriteLE32(s32 *buff) {s32 v = SDL_SwapLE32(*buff); return SDL_RWwrite(rwops, &v, 4, 1);}
+ 
++  /** Writes a 32-bit IEEE-754 float data in little-endian format.
++   * @param  buff Variable with the data in the machine weight.
++   * @return Number of bytes written or 0 (zero) if an error occured. 
++   */
++  u32 WriteLE32(const float *fbuff)
++	{
++		typedef char staticassert[sizeof(u32) == sizeof(float) ? 1 : -1 ];
++		u32 ibuff;
++		memcpy(&ibuff, fbuff, sizeof(u32));
++		return WriteLE32(&ibuff);
++	}
++
+   /** Writes a 32-bit unsigned data in big-endian format.
+    * @param  buff Variable with the data in the machine weight.
+    * @return Number of bytes written or 0 (zero) if an error occured. 
+diff -NarU3 holotz-castle-1.3.11-src.orig/JLib/JLib/Util/JTypes.h holotz-castle-1.3.11-src/JLib/JLib/Util/JTypes.h
+--- holotz-castle-1.3.11-src.orig/JLib/JLib/Util/JTypes.h	2008-08-23 20:36:06.000000000 +0200
++++ holotz-castle-1.3.11-src/JLib/JLib/Util/JTypes.h	2008-08-25 12:27:55.000000000 +0200
+@@ -85,10 +85,10 @@
+ // use the 8bit and 16bit macros listed here, and using any of the 32-bit macros in this case could
+ // translate in a segmentation fault during execution. Notice that he 'double' and 'long' types are normally 
+ // twice the size of the architecture
+-#define JCAST_8_TO_VOIDPTR(val)  ((void *)size_t(*((u8 *)&(val))))
+-#define JCAST_16_TO_VOIDPTR(val) ((void *)size_t(*((u16 *)&(val))))
+-#define JCAST_32_TO_VOIDPTR(val) ((void *)size_t(*((u32 *)&(val))))
+-#define JCAST_64_TO_VOIDPTR(val) ((void *)size_t(*((u64 *)&(val))))
++#define JCAST_8_TO_VOIDPTR(val)  ((void *)(size_t)(val))
++#define JCAST_16_TO_VOIDPTR(val) ((void *)(size_t)(val))
++#define JCAST_32_TO_VOIDPTR(val) ((void *)(size_t)(val))
++#define JCAST_64_TO_VOIDPTR(val) ((void *)(size_t)(val))
+ 
+ #define JCAST_S8_TO_VOIDPTR(val) JCAST_8_TO_VOIDPTR((val))
+ #define JCAST_U8_TO_VOIDPTR(val) JCAST_8_TO_VOIDPTR((val))
+@@ -101,7 +101,7 @@
+ #define JCAST_U64_TO_VOIDPTR(val) JCAST_64_TO_VOIDPTR((val))
+ #define JCAST_DOUBLE_TO_VOIDPTR(val) JCAST_64_TO_VOIDPTR((val))
+ 
+-#define JCAST_VOIDPTR_TO_TYPE(p, type) (*((type *)&(p)))
++#define JCAST_VOIDPTR_TO_TYPE(p, type) ((type)(size_t)(p))
+ #define JCAST_VOIDPTR_TO_S8(p) JCAST_VOIDPTR_TO_TYPE(p, s8)
+ #define JCAST_VOIDPTR_TO_U8(p) JCAST_VOIDPTR_TO_TYPE(p, u8)
+ #define JCAST_VOIDPTR_TO_S16(p) JCAST_VOIDPTR_TO_TYPE(p, s16)
+diff -NarU3 holotz-castle-1.3.11-src.orig/JLib/JLib/Util/JUtil.cpp holotz-castle-1.3.11-src/JLib/JLib/Util/JUtil.cpp
+--- holotz-castle-1.3.11-src.orig/JLib/JLib/Util/JUtil.cpp	2008-08-23 20:36:06.000000000 +0200
++++ holotz-castle-1.3.11-src/JLib/JLib/Util/JUtil.cpp	2008-08-25 12:27:55.000000000 +0200
+@@ -209,7 +209,6 @@
+ 					s->w, s->h, fmt->BitsPerPixel, fmt->colorkey, fmt->alpha, 
+ 					s->flags & SDL_SRCALPHA ? "yes" : "no", 
+ 					s->flags & SDL_SRCCOLORKEY ? "yes" : "no",
+-					s->flags & SDL_RLEACCEL ? "yes" : "no",
+ 					s->flags & SDL_RLEACCEL ? "yes" : "no");
+ 	fprintf(stderr, 
+ 					"RGBAmask: R: 0x%08x G: 0x%08x B: 0x%08x A: 0x%08x\n", 
+diff -NarU3 holotz-castle-1.3.11-src.orig/JLib/Makefile holotz-castle-1.3.11-src/JLib/Makefile
+--- holotz-castle-1.3.11-src.orig/JLib/Makefile	2008-08-23 20:36:06.000000000 +0200
++++ holotz-castle-1.3.11-src/JLib/Makefile	2008-08-25 11:59:08.000000000 +0200
+@@ -28,15 +28,15 @@
+ 
+ # JLib
+ libJLib: $(JLIB_OBJS)
+-	g++-4.1 -shared -L/usr/lib -fPIC -o $@.so $? \
++	g++ -shared -L/usr/lib -fPIC -o $@.so $? \
+ 	&& ar rvus $@.a $? \
+ 
+ $(GRAPHICS)/%.o: $(GRAPHICS)/%.cpp
+-	g++-4.1 $(CFLAGS) -c -o $@ $<
++	g++ $(CFLAGS) -c -o $@ $<
+ $(UTIL)/%.o: $(UTIL)/%.cpp
+-	g++-4.1 $(CFLAGS) -c -o $@ $<
++	g++ $(CFLAGS) -c -o $@ $<
+ $(MATH)/%.o: $(MATH)/%.cpp
+-	g++-4.1 $(CFLAGS) -c -o $@ $<
++	g++ $(CFLAGS) -c -o $@ $<
+ 
+ .PHONY: install
+ install:
+diff -NarU3 holotz-castle-1.3.11-src.orig/src/HCCharacter.cpp holotz-castle-1.3.11-src/src/HCCharacter.cpp
+--- holotz-castle-1.3.11-src.orig/src/HCCharacter.cpp	2008-08-23 20:36:07.000000000 +0200
++++ holotz-castle-1.3.11-src/src/HCCharacter.cpp	2008-08-25 12:38:41.000000000 +0200
+@@ -739,7 +739,7 @@
+ 	if (actions & HCCA_UP && state != HCCS_HANG)
+ 	{
+ 		// Up requested
+-		if (map->Cell(row, col)->Actions() & HCACTION_UP != 0)
++		if ((map->Cell(row, col)->Actions() & HCACTION_UP) != 0)
+ 		{
+ 			State(HCCS_UP);
+ 			// Can go up in the current cell
+@@ -873,10 +873,10 @@
+ u32 HCCharacter::Load(JRW &file)
+ {
+ 	if (0 == file.ReadLE32(&subtype) ||
+-			0 == file.ReadLE32((u32 *)&pos.x) ||
+-			0 == file.ReadLE32((u32 *)&pos.y) ||
+-			0 == file.ReadLE32((u32 *)&vMax.x) ||
+-			0 == file.ReadLE32((u32 *)&vMax.y) ||
++			0 == file.ReadLE32(&pos.x) ||
++			0 == file.ReadLE32(&pos.y) ||
++			0 == file.ReadLE32(&vMax.x) ||
++			0 == file.ReadLE32(&vMax.y) ||
+ 			0 == file.ReadLE32(&maxJumpRows))
+ 	{
+ 		fprintf(stderr, "Error reading character's common parameters.\n");
+@@ -891,10 +891,10 @@
+ u32 HCCharacter::Save(JRW &file)
+ {
+ 	if (0 == file.WriteLE32(&subtype) ||
+-			0 == file.WriteLE32((u32 *)&pos.x) ||
+-			0 == file.WriteLE32((u32 *)&pos.y) ||
+-			0 == file.WriteLE32((u32 *)&vMax.x) ||
+-			0 == file.WriteLE32((u32 *)&vMax.y) ||
++			0 == file.WriteLE32(&pos.x) ||
++			0 == file.WriteLE32(&pos.y) ||
++			0 == file.WriteLE32(&vMax.x) ||
++			0 == file.WriteLE32(&vMax.y) ||
+ 			0 == file.WriteLE32(&maxJumpRows))
+ 	{
+ 		fprintf(stderr, "Error writing character's common parameters.\n");
+diff -NarU3 holotz-castle-1.3.11-src.orig/src/HCEnemy.cpp holotz-castle-1.3.11-src/src/HCEnemy.cpp
+--- holotz-castle-1.3.11-src.orig/src/HCEnemy.cpp	2008-08-23 20:36:07.000000000 +0200
++++ holotz-castle-1.3.11-src/src/HCEnemy.cpp	2008-08-25 12:27:20.000000000 +0200
+@@ -130,7 +130,9 @@
+ 
+ u32 HCEnemy::Load(JRW &file, HCTheme &theme, HCMap *_map)
+ {
+-	if (0 == file.ReadLE32((s32 *)&type) ||
++	u32 typeNum;
++
++	if (0 == file.ReadLE32(&typeNum) ||
+ 			0 == file.ReadLE32(&param1) ||
+ 			0 == file.ReadLE32(&param2) ||
+ 			0 != HCCharacter::Load(file))
+@@ -141,7 +143,7 @@
+ 
+ 	bool ret = false;
+ 
+-	switch (type)
++	switch (typeNum)
+ 	{
+ 	default:
+ 	case HCENEMYTYPE_BALL:
+@@ -170,6 +172,8 @@
+ 		return 2;
+ 	}
+ 
++	type = HCEnemyType(typeNum);
++
+ 	// Adjusts the sprite's framerate according to 1st param
+ 	for (s32 i = 0; i < HCCS_COUNT; ++i)
+ 	{
+@@ -181,7 +185,9 @@
+ 
+ u32 HCEnemy::Save(JRW &file)
+ {
+-	if (0 == file.WriteLE32((s32 *)&type) ||
++	u32 typeNum = type;
++
++	if (0 == file.WriteLE32(&typeNum) ||
+ 			0 == file.WriteLE32(&param1) ||
+ 			0 == file.WriteLE32(&param2) ||
+ 			0 != HCCharacter::Save(file))
+diff -NarU3 holotz-castle-1.3.11-src.orig/src/HCEnemyChaser.cpp holotz-castle-1.3.11-src/src/HCEnemyChaser.cpp
+--- holotz-castle-1.3.11-src.orig/src/HCEnemyChaser.cpp	2008-08-23 20:36:07.000000000 +0200
++++ holotz-castle-1.3.11-src/src/HCEnemyChaser.cpp	2008-08-25 12:45:12.000000000 +0200
+@@ -247,7 +247,7 @@
+ 
+ s32 HCEnemyChaser::GoTo(s32 row, s32 col)
+ {
+-	if (finalRow != row || finalCol != col || chasePathNumCells == (u32)-1)
++	if ((finalRow != row) || (finalCol != col) || (chasePathNumCells == (u32)-1))
+ 	{
+ 		s32 curRow = Row(), curCol = Col();
+ 
+@@ -555,13 +555,13 @@
+ 	s32 r = map->ToRow((s32)chased->Y()), c = map->ToCol((s32)chased->X());
+ 	s32 curRow = Row(), curCol = Col();
+ 	
+-	if (chased->State() == HCCS_JUMP ||
+-			chased->State() == HCCS_JUMPLEFT ||
+-			chased->State() == HCCS_JUMPRIGHT || 
+-			chased->State() == HCCS_HANG ||
+-			(abs(curRow - r) + abs(curCol - c) <= searchDepth && 0 == GoTo(r, c)))
++	if ((chased->State() == HCCS_JUMP) ||
++			(chased->State() == HCCS_JUMPLEFT) ||
++			(chased->State() == HCCS_JUMPRIGHT) || 
++			(chased->State() == HCCS_HANG) ||
++			((abs(curRow - r) + abs(curCol - c) <= searchDepth) && (0 == GoTo(r, c))) )
+ 		{
+-		if (chasePath[chaseIndex].col != curCol || chasePath[chaseIndex].row != curRow && chaseIndex < searchDepth - 1)
++		if ((chasePath[chaseIndex].col != curCol) || ((chasePath[chaseIndex].row != curRow) && (chaseIndex < searchDepth - 1)))
+ 		{
+ 			// Updates the chase index within the path when the row or column changes
+ 			++chaseIndex;
+diff -NarU3 holotz-castle-1.3.11-src.orig/src/HCLevel.cpp holotz-castle-1.3.11-src/src/HCLevel.cpp
+--- holotz-castle-1.3.11-src.orig/src/HCLevel.cpp	2008-08-23 20:36:07.000000000 +0200
++++ holotz-castle-1.3.11-src/src/HCLevel.cpp	2008-08-25 12:27:20.000000000 +0200
+@@ -406,7 +406,7 @@
+ 
+ 		for (s32 i = 0; i < numEnemies; ++i)
+ 		{
+-			if (0 != file.ReadLE32((s32 *)&enemyType))
++			if (0 != file.ReadLE32(&enemyType))
+ 			{
+         // Lets the file at ist original position
+         file.Seek(-4, SEEK_CUR);
+diff -NarU3 holotz-castle-1.3.11-src.orig/src/HCMap.cpp holotz-castle-1.3.11-src/src/HCMap.cpp
+--- holotz-castle-1.3.11-src.orig/src/HCMap.cpp	2008-08-23 20:36:07.000000000 +0200
++++ holotz-castle-1.3.11-src/src/HCMap.cpp	2008-08-25 12:27:20.000000000 +0200
+@@ -387,7 +387,7 @@
+ 	Destroy();
+ 
+ 	// Loads the number of rows and cols, etc.
+-	if (0 == f.ReadLE32((u32 *)&gravity) ||
++	if (0 == f.ReadLE32(&gravity) ||
+ 			0 == f.ReadLE32(&rows) ||
+ 			0 == f.ReadLE32(&cols) ||
+ 			0 == f.ReadLE32(&exitRow) ||
+@@ -472,7 +472,7 @@
+ u32 HCMap::Save(JRW &f)
+ {
+ 	// Saves the number of rows and cols, etc.
+-	if (0 == f.WriteLE32((u32 *)&gravity) ||
++	if (0 == f.WriteLE32(&gravity) ||
+ 			0 == f.WriteLE32(&rows) ||
+ 			0 == f.WriteLE32(&cols) ||
+ 			0 == f.WriteLE32(&exitRow) ||
+diff -NarU3 holotz-castle-1.3.11-src.orig/src/HCObject.cpp holotz-castle-1.3.11-src/src/HCObject.cpp
+--- holotz-castle-1.3.11-src.orig/src/HCObject.cpp	2008-08-23 20:36:07.000000000 +0200
++++ holotz-castle-1.3.11-src/src/HCObject.cpp	2008-08-25 12:27:20.000000000 +0200
+@@ -82,8 +82,8 @@
+ u32 HCObject::Load(JRW &file)
+ {
+ 	if (0 == file.ReadLE32(&subtype) ||
+-			0 == file.ReadLE32((u32 *)&pos.x) ||
+-			0 == file.ReadLE32((u32 *)&pos.y))
++			0 == file.ReadLE32(&pos.x) ||
++			0 == file.ReadLE32(&pos.y))
+ 	{
+ 		fprintf(stderr, "Error loading the object.\n");
+ 			
+@@ -98,8 +98,8 @@
+ u32 HCObject::Save(JRW &file)
+ {
+ 	if (0 == file.WriteLE32(&subtype) ||
+-			0 == file.WriteLE32((u32 *)&pos.x) ||
+-			0 == file.WriteLE32((u32 *)&pos.y))
++			0 == file.WriteLE32(&pos.x) ||
++			0 == file.WriteLE32(&pos.y))
+ 	{
+ 		fprintf(stderr, "Error saving the object.\n");
+ 			
+diff -NarU3 holotz-castle-1.3.11-src.orig/src/HCRope.cpp holotz-castle-1.3.11-src/src/HCRope.cpp
+--- holotz-castle-1.3.11-src.orig/src/HCRope.cpp	2008-08-23 20:36:07.000000000 +0200
++++ holotz-castle-1.3.11-src/src/HCRope.cpp	2008-08-25 12:27:20.000000000 +0200
+@@ -127,12 +127,12 @@
+ 
+ u32 HCRope::Load(JRW &file)
+ {
+-	if (0 == file.ReadLE32((u32 *)&period) ||
++	if (0 == file.ReadLE32(&period) ||
+ 			0 == file.ReadLE32(&amplitude) ||
+ 			0 == file.ReadLE32(&length) ||
+ 			0 == file.ReadLE32(&subtype) ||
+-			0 == file.ReadLE32((u32 *)&pos.x) ||
+-			0 == file.ReadLE32((u32 *)&pos.y))
++			0 == file.ReadLE32(&pos.x) ||
++			0 == file.ReadLE32(&pos.y))
+ 	{
+ 		fprintf(stderr, "Error reading rope parameters.\n");
+ 		
+@@ -161,12 +161,12 @@
+ 
+ u32 HCRope::Save(JRW &file)
+ {
+-	if (0 == file.WriteLE32((u32 *)&period) ||
++	if (0 == file.WriteLE32(&period) ||
+ 			0 == file.WriteLE32(&amplitude) ||
+ 			0 == file.WriteLE32(&length) ||
+ 			0 == file.WriteLE32(&subtype) ||
+-			0 == file.WriteLE32((u32 *)&pos.x) ||
+-			0 == file.WriteLE32((u32 *)&pos.y))
++			0 == file.WriteLE32(&pos.x) ||
++			0 == file.WriteLE32(&pos.y))
+ 	{
+ 		fprintf(stderr, "Error writing rope parameters.\n");
+ 		
+diff -NarU3 holotz-castle-1.3.11-src.orig/src/HCText.h holotz-castle-1.3.11-src/src/HCText.h
+--- holotz-castle-1.3.11-src.orig/src/HCText.h	2008-08-23 20:36:07.000000000 +0200
++++ holotz-castle-1.3.11-src/src/HCText.h	2008-08-25 12:23:51.000000000 +0200
+@@ -35,7 +35,7 @@
+ #include <JLib/Graphics/JFont.h>
+ #include <HCTheme.h>
+ 
+-typedef enum HCTextType
++enum HCTextType
+ {
+ 	HCTEXTTYPE_DIALOG,                    /**< Dialog balloon. */
+ 	HCTEXTTYPE_NARRATIVE,                 /**< Narrative frame. */

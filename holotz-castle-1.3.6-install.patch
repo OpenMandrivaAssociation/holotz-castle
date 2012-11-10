@@ -1,0 +1,39 @@
+--- src/Makefile.orig	2005-05-17 17:03:42.169995343 +0200
++++ src/Makefile	2005-05-17 17:06:55.415636808 +0200
+@@ -20,7 +20,7 @@
+ HC_BASE = /usr/share/games/holotz-castle/
+ HC_DATA = $(HC_BASE)game/
+ HCED_DATA = $(HC_BASE)editor/
+-HC_BIN_DIR = /usr/local/bin/
++HC_BIN_DIR = /usr/games/
+ endif
+ 
+ DEFINES = -DHC_DATA_DIR=\"$(HC_DATA)\" -DHCED_DATA_DIR=\"$(HCED_DATA)\"
+@@ -56,18 +56,18 @@
+ 	mv HCed ../holotz-castle-editor
+ 
+ install:
+-	mkdir -p $(HC_DATA);\
+-  mkdir -p $(HCED_DATA);\
+-	chmod -R a+rx $(HC_DATA) $(HCED_DATA);\
+-  mkdir -p $(HC_BIN_DIR);\
+-	cp -r ../res/[^H]* $(HC_DATA) && cp -r ../HCedHome/res/* $(HCED_DATA);\
++	mkdir -p $(INSTALL_ROOT)$(HC_DATA);\
++  mkdir -p $(INSTALL_ROOT)$(HCED_DATA);\
++	chmod -R a+rx $(INSTALL_ROOT)$(HC_DATA) $(INSTALL_ROOT)$(HCED_DATA);\
++  mkdir -p $(INSTALL_ROOT)$(HC_BIN_DIR);\
++	cp -r ../res/[^H]* $(INSTALL_ROOT)$(HC_DATA) && cp -r ../HCedHome/res/* $(INSTALL_ROOT)$(HCED_DATA);\
+ 	chmod -R a+x ../holotz-castle ../holotz-castle-editor;\
+-	cp ../holotz-castle ../holotz-castle-editor $(HC_BIN_DIR);\
+-	chmod -R a+r $(HC_DATA) $(HCED_DATA);
++	cp ../holotz-castle ../holotz-castle-editor $(INSTALL_ROOT)$(HC_BIN_DIR);\
++	chmod -R a+r $(INSTALL_ROOT)$(HC_DATA) $(INSTALL_ROOT)$(HCED_DATA);
+ 
+ uninstall:
+-	rm -rf $(HC_BASE);\
+-	rm -f $(HC_BIN_DIR)holotz-castle $(HC_BIN_DIR)holotz-castle-editor;\
++	rm -rf $(INSTALL_ROOT)$(HC_BASE);\
++	rm -f $(INSTALL_ROOT)$(HC_BIN_DIR)holotz-castle $(INSTALL_ROOT)$(HC_BIN_DIR)holotz-castle-editor;\
+ 
+ .PHONY: clean
+ clean:
