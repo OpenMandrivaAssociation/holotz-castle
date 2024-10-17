@@ -5,7 +5,7 @@ Release:		%mkrel 2
 Summary:	Holotz's Castle - A strategy platform scroller
 License:	GPLv2+
 Group:		Games/Arcade
-URL:		http://www.mainreactor.net/holotzcastle/en/index_en.html
+URL:		https://www.mainreactor.net/holotzcastle/en/index_en.html
 Source0:	http://www.mainreactor.net/holotzcastle/download/%{name}-%{version}-src.tar.gz
 Source10:	hc-48x48.png
 Source11:	hc-32x32.png
