@@ -17,6 +17,7 @@ Patch0:		holotz-castle-1.3.6-install.patch
 Patch1:		holotz-castle-1.3.11-compile-fixes.patch
 Patch2:		holotz-castle-1.3.14-compile-fixes.patch
 
+BuildRequires:	make
 BuildRequires:	SDL-devel
 BuildRequires:	SDL_mixer-devel
 BuildRequires:	SDL_image-devel
